@@ -6,6 +6,7 @@ using Library.API.DTOs;
 using Library.API.Services.LibService;
 using Microsoft.AspNetCore.Mvc;
 using Library.API.Helpers;
+using AutoMapper;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -26,25 +27,23 @@ namespace Library.API.Controllers
         public IActionResult Get()
         {
             var authors = Repository.GetAuthors();
-            var authorDto = new List<AuthorDto>();
-            foreach (var author in authors)
-            {
-                authorDto.Add(new AuthorDto()
-                {
-                    Id = author.Id,
-                    Name = $"{author.FirstName}, {author.LastName}",
-                    Genre = author.Genre,
-                    Age = author.DateOfBirth.GetCurrentAge()
-                });
-            }
-            return new JsonResult(authorDto);
+            var authorDto = Mapper.Map<IEnumerable<AuthorDto>>(authors);
+
+            return Ok(authorDto);
         }
 
         // GET api/authors/76053df4-6687-4353-8937-b45556748abe
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public IActionResult Get(Guid id)
         {
-            return null;
+            var author = Repository.GetAuthor(id);
+
+            if (author == null)
+                return NotFound();
+
+            var authorDto = Mapper.Map<AuthorDto>(author);
+
+            return Ok(authorDto);
         }
 
         // POST api/<controller>

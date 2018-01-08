@@ -15,8 +15,8 @@ namespace Library.API.Models
         public string Title { get; set; }
         [Required, MaxLength(500)]
         public string Description { get; set; }
+        public Guid AuthorId { get; set; }
         [ForeignKey("AuthorId")]
         public Author Author { get; set; }
-        public Guid AuthorID { get; set; }
     }
 }

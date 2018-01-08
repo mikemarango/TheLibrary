@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Library.API.Data;
+using Library.API.Services.LibService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ namespace Library.API
             services.AddMvc();
             services.AddDbContext<LibraryContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddScoped<ILibraryRepository, LibraryRepository>();
             
         }
 

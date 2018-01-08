@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Library.API.Data;
+using Library.API.DTOs;
+using Library.API.Helpers;
+using Library.API.Models;
 using Library.API.Services.LibService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -40,6 +44,18 @@ namespace Library.API
             {
                 app.UseDeveloperExceptionPage();
             }
+
+
+            Mapper.Initialize(config =>
+            {
+                config.CreateMap<Author, AuthorDto>()
+                    .ForMember(dest => dest.Name, opt => opt.MapFrom(src =>
+                    $"{src.FirstName} {src.LastName}"))
+                    .ForMember(dest => dest.Age, opt => opt.MapFrom(src =>
+                    src.DateOfBirth.GetCurrentAge()));
+
+                config.CreateMap<Book, BookDto>();
+            });
 
             app.UseMvc();
         }

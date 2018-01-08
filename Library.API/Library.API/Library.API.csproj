@@ -5,6 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="DTOs\" />
+    <Folder Include="Services\LibService\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

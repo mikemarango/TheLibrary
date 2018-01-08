@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Library.API.DTOs;
+using Library.API.Models;
 using Library.API.Services.LibService;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,7 +37,7 @@ namespace Library.API.Controllers
         }
 
         // GET api/<controller>/5
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetBook")]
         public IActionResult Get(Guid authorId, Guid id)
         {
             if (!Repository.AuthorExists(authorId))
@@ -54,9 +55,24 @@ namespace Library.API.Controllers
 
         // POST api/<controller>
         [HttpPost]
-        public IActionResult Post([FromBody]string value)
+        public IActionResult Post(Guid authorId, [FromBody]BookCreateDto createDto)
         {
-            return null;
+            if (createDto == null)
+                return BadRequest();
+
+            if (!Repository.AuthorExists(authorId))
+                return NotFound();
+
+            var book = Mapper.Map<Book>(createDto);
+
+            Repository.CreateBook(authorId, book);
+
+            if (!Repository.Save())
+                throw new Exception($"Creating book for author {authorId} was unsuccessful.");
+
+            var bookDto = Mapper.Map<BookDto>(book);
+
+            return CreatedAtRoute("GetBook", new { authorId, id = bookDto.Id }, bookDto );
         }
 
         // PUT api/<controller>/5

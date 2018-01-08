@@ -71,6 +71,8 @@ namespace Library.API
                     src.DateOfBirth.GetCurrentAge()));
 
                 config.CreateMap<Book, BookDto>();
+                config.CreateMap<AuthorCreateDto, Author>();
+                config.CreateMap<BookCreateDto, Book>();
             });
 
             app.UseMvc();

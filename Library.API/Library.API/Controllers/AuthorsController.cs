@@ -7,6 +7,7 @@ using Library.API.Services.LibService;
 using Microsoft.AspNetCore.Mvc;
 using Library.API.Helpers;
 using AutoMapper;
+using Library.API.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -33,7 +34,7 @@ namespace Library.API.Controllers
         }
 
         // GET api/authors/76053df4-6687-4353-8937-b45556748abe
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetAuthor")]
         public IActionResult Get(Guid id)
         {
             var author = Repository.GetAuthor(id);
@@ -48,9 +49,21 @@ namespace Library.API.Controllers
 
         // POST api/<controller>
         [HttpPost]
-        public IActionResult Post([FromBody]string value)
+        public IActionResult Post([FromBody]AuthorCreateDto authorCreate)
         {
-            return null;
+            if (authorCreate == null)
+                return BadRequest();
+
+            var author = Mapper.Map<Author>(authorCreate);
+
+            Repository.CreateAuthor(author);
+
+            if (!Repository.Save())
+                throw new Exception("Author creation unsuccessful.");
+
+            var authorDto = Mapper.Map<AuthorDto>(author);
+
+            return CreatedAtRoute("GetAuthor", new { id = authorDto.Id }, authorDto);
         }
 
         // PUT api/<controller>/5

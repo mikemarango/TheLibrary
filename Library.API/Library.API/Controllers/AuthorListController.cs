@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Library.API.DTOs;
+using Library.API.Helpers;
 using Library.API.Models;
 using Library.API.Services.LibService;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,22 @@ namespace Library.API.Controllers
         public AuthorListController(ILibraryRepository repository)
         {
             Repository = repository;
+        }
+
+        [HttpGet("{id}", Name = "GetAuthorCollection")]
+        public IActionResult Get([ModelBinder(BinderType = typeof(ArrayModelBinder))]IEnumerable<Guid> id)
+        {
+            if (id == null)
+                return BadRequest();
+
+            var authors = Repository.GetAuthors(id);
+
+            if (id.Count() != authors.Count())
+                return NotFound();
+
+            var authorDto = Mapper.Map<IEnumerable<AuthorDto>>(authors);
+
+            return Ok(authorDto);
         }
 
         // POST api/<controller>
@@ -39,8 +56,11 @@ namespace Library.API.Controllers
             if (!Repository.Save())
                 throw new Exception("Unsuccessful creation of authors collection.");
 
-            return Ok();
-        }
+            var authorDto = Mapper.Map<IEnumerable<AuthorDto>>(authors);
 
+            var idString = string.Join(",", authorDto.Select(a => a.Id));
+
+            return CreatedAtRoute("GetAuthorCollection", new { id = idString }, authorDto);
+        }
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Library.API.Helpers;
 using AutoMapper;
 using Library.API.Models;
+using Microsoft.AspNetCore.Http;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -64,6 +65,15 @@ namespace Library.API.Controllers
             var authorDto = Mapper.Map<AuthorDto>(author);
 
             return CreatedAtRoute("GetAuthor", new { id = authorDto.Id }, authorDto);
+        }
+
+        [HttpPost("{id}")]
+        public IActionResult Post(Guid id)
+        {
+            if (Repository.AuthorExists(id))
+                return StatusCode(409);
+
+            return NotFound();
         }
 
         // PUT api/<controller>/5

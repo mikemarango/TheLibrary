@@ -77,9 +77,40 @@ namespace Library.API.Controllers
 
         // PUT api/<controller>/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody]string value)
+        public IActionResult Put(Guid authorId, Guid id, [FromBody]BookUpdateDto bookDto)
         {
-            return null;
+            if (bookDto == null) return BadRequest();
+
+            if (!Repository.AuthorExists(authorId))
+                return NotFound();
+
+            Book book = Repository.GetBook(authorId, id);
+
+            if (book == null)
+            {
+                var bookToAdd = Mapper.Map<Book>(bookDto);
+                //var bookToAdd = Mapper.Map(bookDto, book);
+                bookToAdd.Id = id;
+                Repository.CreateBook(authorId, bookToAdd);
+
+                if (!Repository.Save())
+                    throw new Exception($"Upserting book {id} for author {authorId} failed.");
+
+                var bookCreated = Mapper.Map<BookDto>(bookToAdd);
+
+                return CreatedAtRoute("GetBook",new { authorId, id = bookCreated.Id }, bookCreated);
+            }
+
+            // Mapper.Map<Book>(bookDto);
+            Mapper.Map(bookDto, book);
+
+            Repository.UpdateBook(book);
+
+            if (!Repository.Save())
+                throw new Exception($"Failed to update book {id} for author {authorId}");
+
+            return NoContent();
+
         }
 
         // DELETE api/<controller>/5

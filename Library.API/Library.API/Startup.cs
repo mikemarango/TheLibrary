@@ -73,6 +73,7 @@ namespace Library.API
                 config.CreateMap<Book, BookDto>();
                 config.CreateMap<AuthorCreateDto, Author>();
                 config.CreateMap<BookCreateDto, Book>();
+                config.CreateMap<BookUpdateDto, Book>();
             });
 
             app.UseMvc();

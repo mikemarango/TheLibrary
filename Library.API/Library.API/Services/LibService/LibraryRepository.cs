@@ -90,7 +90,7 @@ namespace Library.API.Services.LibService
 
         public void UpdateBook(Book book)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void DeleteBook(Book book)

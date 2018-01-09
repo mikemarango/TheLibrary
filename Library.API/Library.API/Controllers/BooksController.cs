@@ -84,9 +84,21 @@ namespace Library.API.Controllers
 
         // DELETE api/<controller>/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(Guid authorId, Guid id)
         {
-            return null;
+            if (!Repository.AuthorExists(authorId))
+                return NotFound();
+
+            Book book = Repository.GetBook(authorId, id);
+
+            if (book == null) return NotFound();
+
+            Repository.DeleteBook(book);
+
+            if (!Repository.Save())
+                throw new Exception($"Failed to delete book {id} for author {authorId}.");
+
+            return NoContent();
         }
     }
 }

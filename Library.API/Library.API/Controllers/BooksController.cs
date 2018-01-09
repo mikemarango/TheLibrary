@@ -6,6 +6,7 @@ using AutoMapper;
 using Library.API.DTOs;
 using Library.API.Models;
 using Library.API.Services.LibService;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -111,6 +112,51 @@ namespace Library.API.Controllers
 
             return NoContent();
 
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult Patch(Guid authorId, Guid id, [FromBody]JsonPatchDocument<BookUpdateDto> bookPatch)
+        {
+            if (bookPatch == null) return BadRequest();
+
+            if (!Repository.AuthorExists(authorId))
+                return NotFound();
+
+            var book = Repository.GetBook(authorId, id);
+
+            if (book == null)
+            {
+                var bookUpdate = new BookUpdateDto();
+                bookPatch.ApplyTo(bookUpdate);
+
+                var bookToAdd = Mapper.Map<Book>(bookUpdate);
+
+                bookToAdd.Id = id;
+
+                Repository.CreateBook(authorId, bookToAdd);
+
+                if (!Repository.Save())
+                    throw new Exception($"Upserting book {id} for author {authorId} failed.");
+
+                var bookCreated = Mapper.Map<BookDto>(bookToAdd);
+
+                return CreatedAtRoute("GetBook", new { authorId, id = bookCreated.Id }, bookCreated);
+            }
+
+            var bookUpdateDto = Mapper.Map<BookUpdateDto>(book);
+
+            bookPatch.ApplyTo(bookUpdateDto);
+
+            // add validation
+
+            Mapper.Map(bookUpdateDto, book);
+
+            Repository.UpdateBook(book);
+
+            if (!Repository.Save())
+                throw new Exception($"Patching book {id} for author {authorId} failed.");
+
+            return NoContent();
         }
 
         // DELETE api/<controller>/5

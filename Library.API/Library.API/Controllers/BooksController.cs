@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Library.API.DTOs;
+using Library.API.Helpers;
 using Library.API.Models;
 using Library.API.Services.LibService;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
@@ -60,6 +62,14 @@ namespace Library.API.Controllers
         {
             if (createDto == null)
                 return BadRequest();
+
+            if (createDto.Description == createDto.Title)
+                ModelState.AddModelError(nameof(createDto), "The title and description must be different.");
+
+            if (!ModelState.IsValid)
+                //return StatusCode(422, ModelState.ErrorCount);
+                //return new StatusCodeResult(StatusCodes.Status422UnprocessableEntity);
+                return new UnprocessableEntityObjectResult(ModelState);
 
             if (!Repository.AuthorExists(authorId))
                 return NotFound();

@@ -23,12 +23,25 @@ namespace Library.API.Services.LibService
                 .OrderBy(a => a.FirstName)
                 .ThenBy(a => a.LastName).AsQueryable();
 
+            // Filter string
             if (!string.IsNullOrEmpty(resourceParameters.Genre))
             {
-                //trim and ignore case
-                string genre = resourceParameters.Genre.Trim().ToLowerInvariant();
+                // trim and ignore case
+                string filter = resourceParameters.Genre.Trim().ToLowerInvariant();
                 collectionBeforePaging = collectionBeforePaging
-                    .Where(a => a.Genre.ToLowerInvariant() == genre);
+                    .Where(a => a.Genre.ToLowerInvariant() == filter);
+            }
+
+            // Search string
+            if (!string.IsNullOrEmpty(resourceParameters.SearchQuery))
+            {
+                // trim & ignore casing
+                string search = resourceParameters.SearchQuery.Trim().ToLowerInvariant();
+
+                collectionBeforePaging = collectionBeforePaging
+                    .Where(a => a.Genre.ToLowerInvariant().Contains(search)
+                    || a.FirstName.ToLowerInvariant().Contains(search)
+                    || a.LastName.ToLowerInvariant().Contains(search));
             }
 
             return PagedList<Author>

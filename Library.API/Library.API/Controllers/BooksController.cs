@@ -92,6 +92,12 @@ namespace Library.API.Controllers
         {
             if (bookDto == null) return BadRequest();
 
+            if (bookDto.Description == bookDto.Title)
+                ModelState.AddModelError(nameof(BookUpdateDto), "The description must be different from the title.");
+
+            if (!ModelState.IsValid)
+                return new UnprocessableEntityObjectResult(ModelState);
+
             if (!Repository.AuthorExists(authorId))
                 return NotFound();
 
@@ -124,10 +130,14 @@ namespace Library.API.Controllers
 
         }
 
+        // PATCH = Partially Update
         [HttpPatch("{id}")]
         public IActionResult Patch(Guid authorId, Guid id, [FromBody]JsonPatchDocument<BookUpdateDto> bookPatch)
         {
-            if (bookPatch == null) return BadRequest();
+            if (bookPatch == null)
+            {
+                return BadRequest();
+            }
 
             if (!Repository.AuthorExists(authorId))
                 return NotFound();
@@ -137,7 +147,16 @@ namespace Library.API.Controllers
             if (book == null)
             {
                 var bookUpdate = new BookUpdateDto();
-                bookPatch.ApplyTo(bookUpdate);
+
+                bookPatch.ApplyTo(bookUpdate, ModelState);
+
+                if (bookUpdate.Description == bookUpdate.Title)
+                    ModelState.AddModelError(nameof(BookUpdateDto), "The description and title must be different!");
+
+                TryValidateModel(bookUpdate);
+
+                if (!ModelState.IsValid)
+                    return new UnprocessableEntityObjectResult(ModelState);
 
                 var bookToAdd = Mapper.Map<Book>(bookUpdate);
 
@@ -155,9 +174,15 @@ namespace Library.API.Controllers
 
             var bookUpdateDto = Mapper.Map<BookUpdateDto>(book);
 
-            bookPatch.ApplyTo(bookUpdateDto);
+            bookPatch.ApplyTo(bookUpdateDto, ModelState);
 
-            // add validation
+            if (bookUpdateDto.Description == bookUpdateDto.Title)
+                ModelState.AddModelError(nameof(BookUpdateDto), "The description and title must be different!");
+
+            TryValidateModel(bookUpdateDto);
+
+            if (!ModelState.IsValid)
+                return new UnprocessableEntityObjectResult(ModelState);
 
             Mapper.Map(bookUpdateDto, book);
 

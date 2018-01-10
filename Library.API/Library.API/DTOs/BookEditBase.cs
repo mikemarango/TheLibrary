@@ -11,6 +11,6 @@ namespace Library.API.DTOs
         [Required(ErrorMessage = "Please enter a Title"), MaxLength(100, ErrorMessage = "Title should not exceed 100 letters.")]
         public string Title { get; set; }
         [MaxLength(500, ErrorMessage = "The description should not exceed 70 words.")]
-        public string Description { get; set; }
+        public virtual string Description { get; set; }
     }
 }

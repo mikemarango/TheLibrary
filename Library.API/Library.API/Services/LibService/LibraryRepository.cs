@@ -21,9 +21,18 @@ namespace Library.API.Services.LibService
         {
             var collectionBeforePaging = Context.Authors
                 .OrderBy(a => a.FirstName)
-                .ThenBy(a => a.LastName);
+                .ThenBy(a => a.LastName).AsQueryable();
 
-            return PagedList<Author>.Create(collectionBeforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
+            if (!string.IsNullOrEmpty(resourceParameters.Genre))
+            {
+                //trim and ignore case
+                string genre = resourceParameters.Genre.Trim().ToLowerInvariant();
+                collectionBeforePaging = collectionBeforePaging
+                    .Where(a => a.Genre.ToLowerInvariant() == genre);
+            }
+
+            return PagedList<Author>
+                .Create(collectionBeforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
 
         }
 

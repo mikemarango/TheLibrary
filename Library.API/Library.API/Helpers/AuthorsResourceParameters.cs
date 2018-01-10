@@ -22,5 +22,7 @@ namespace Library.API.Helpers
                 pageSize = (value > MAX_PAGE_SIZE) ? MAX_PAGE_SIZE : value;
             }
         }
+
+        public string Genre { get; set; }
     }
 }

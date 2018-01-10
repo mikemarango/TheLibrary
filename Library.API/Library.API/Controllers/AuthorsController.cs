@@ -63,6 +63,7 @@ namespace Library.API.Controllers
                 case ResourceUriType.PreviousPage:
                     return UrlHelper.Link("GetAuthors", new
                     {
+                        genre = resourceParameters.Genre,
                         pageNumber = resourceParameters.PageNumber - 1,
                         pageSize = resourceParameters.PageSize
                     });
@@ -70,12 +71,14 @@ namespace Library.API.Controllers
                 case ResourceUriType.NextPage:
                     return UrlHelper.Link("GetAuthors", new
                     {
+                        genre = resourceParameters.Genre,
                         pageNumber = resourceParameters.PageNumber + 1,
                         pageSize = resourceParameters.PageSize
                     });
                 default:
                     return UrlHelper.Link("GetAuthors", new 
                     {
+                        genre = resourceParameters.Genre,
                         pageNumber = resourceParameters.PageNumber,
                         pageSize = resourceParameters.PageSize
                     });

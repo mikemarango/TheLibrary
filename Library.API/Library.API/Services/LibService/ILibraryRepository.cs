@@ -9,7 +9,7 @@ namespace Library.API.Services.LibService
 {
     public interface ILibraryRepository
     {
-        IEnumerable<Author> GetAuthors(AuthorsResourceParameters resourceParameters);
+        PagedList<Author> GetAuthors(AuthorsResourceParameters resourceParameters);
         Author GetAuthor(Guid authorId);
         IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds);
         void CreateAuthor(Author author);

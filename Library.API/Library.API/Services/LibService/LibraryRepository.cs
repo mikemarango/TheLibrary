@@ -17,14 +17,14 @@ namespace Library.API.Services.LibService
             Context = context;
         }
 
-        public IEnumerable<Author> GetAuthors(AuthorsResourceParameters resourceParameters)
+        public PagedList<Author> GetAuthors(AuthorsResourceParameters resourceParameters)
         {
-            return Context.Authors
+            var collectionBeforePaging = Context.Authors
                 .OrderBy(a => a.FirstName)
-                .ThenBy(a => a.LastName)
-                .Skip(resourceParameters.PageSize * (resourceParameters.PageNumber - 1))
-                .Take(resourceParameters.PageSize)
-                .ToList();
+                .ThenBy(a => a.LastName);
+
+            return PagedList<Author>.Create(collectionBeforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
+
         }
 
         public IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds)

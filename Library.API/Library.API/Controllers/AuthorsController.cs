@@ -9,6 +9,7 @@ using Library.API.Helpers;
 using AutoMapper;
 using Library.API.Models;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -18,20 +19,67 @@ namespace Library.API.Controllers
     public class AuthorsController : Controller
     {
         public ILibraryRepository Repository { get; }
+        public IUrlHelper UrlHelper { get; }
 
-        public AuthorsController(ILibraryRepository repository)
+        public AuthorsController(ILibraryRepository repository, IUrlHelper urlHelper)
         {
             Repository = repository;
+            UrlHelper = urlHelper;
         }
 
         // GET: api/authors
-        [HttpGet]
+        [HttpGet(Name = "GetAuthors")]
         public IActionResult Get(AuthorsResourceParameters resourceParameters)
         {
             var authors = Repository.GetAuthors(resourceParameters);
+
+            var previousPageLink = authors.HasPrevious ?
+                CreateAuthorResourceUri(resourceParameters, ResourceUriType.PreviousPage) : null;
+
+            var nextPageLink = authors.HasNext ?
+                CreateAuthorResourceUri(resourceParameters, ResourceUriType.NextPage) : null;
+
+            var paginationMetadata = new
+            {
+                totalCount = authors.TotalCount,
+                pageSize = authors.PageSize,
+                currentPage = authors.CurrentPage,
+                totalPages = authors.TotalPages,
+                previousPageLink,
+                nextPageLink
+            };
+
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationMetadata));
+
             var authorDto = Mapper.Map<IEnumerable<AuthorDto>>(authors);
 
             return Ok(authorDto);
+        }
+
+        private string CreateAuthorResourceUri(AuthorsResourceParameters resourceParameters, ResourceUriType pageContext)
+        {
+            switch (pageContext)
+            {
+                case ResourceUriType.PreviousPage:
+                    return UrlHelper.Link("GetAuthors", new
+                    {
+                        pageNumber = resourceParameters.PageNumber - 1,
+                        pageSize = resourceParameters.PageSize
+                    });
+
+                case ResourceUriType.NextPage:
+                    return UrlHelper.Link("GetAuthors", new
+                    {
+                        pageNumber = resourceParameters.PageNumber + 1,
+                        pageSize = resourceParameters.PageSize
+                    });
+                default:
+                    return UrlHelper.Link("GetAuthors", new 
+                    {
+                        pageNumber = resourceParameters.PageNumber,
+                        pageSize = resourceParameters.PageSize
+                    });
+            }
         }
 
         // GET api/authors/76053df4-6687-4353-8937-b45556748abe

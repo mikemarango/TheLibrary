@@ -10,6 +10,7 @@ using Library.API.Services.LibService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -19,10 +20,12 @@ namespace Library.API.Controllers
     public class BooksController : Controller
     {
         public ILibraryRepository Repository { get; }
+        public ILogger<BooksController> Logger { get; }
 
-        public BooksController(ILibraryRepository repository)
+        public BooksController(ILibraryRepository repository, ILogger<BooksController> logger)
         {
             Repository = repository;
+            Logger = logger;
         }
 
         // GET: api/<controller>
@@ -209,6 +212,8 @@ namespace Library.API.Controllers
 
             if (!Repository.Save())
                 throw new Exception($"Failed to delete book {id} for author {authorId}.");
+
+            Logger.LogInformation(100, $"Book {id} for author {authorId} was deleted.");
 
             return NoContent();
         }

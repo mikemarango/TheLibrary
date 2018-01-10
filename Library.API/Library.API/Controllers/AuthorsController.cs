@@ -17,7 +17,6 @@ namespace Library.API.Controllers
     [Route("api/authors")]
     public class AuthorsController : Controller
     {
-        const int MAX_AUTHOR_PAGE_SIZE = 20;
         public ILibraryRepository Repository { get; }
 
         public AuthorsController(ILibraryRepository repository)
@@ -27,11 +26,9 @@ namespace Library.API.Controllers
 
         // GET: api/authors
         [HttpGet]
-        public IActionResult Get([FromQuery]int pageNumber = 1, [FromQuery]int pageSize = 10)
+        public IActionResult Get(AuthorsResourceParameters resourceParameters)
         {
-            pageSize = (pageSize > MAX_AUTHOR_PAGE_SIZE) ? MAX_AUTHOR_PAGE_SIZE : pageSize;
-
-            var authors = Repository.GetAuthors();
+            var authors = Repository.GetAuthors(resourceParameters);
             var authorDto = Mapper.Map<IEnumerable<AuthorDto>>(authors);
 
             return Ok(authorDto);

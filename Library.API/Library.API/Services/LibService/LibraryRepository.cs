@@ -1,4 +1,5 @@
 ﻿using Library.API.Data;
+using Library.API.Helpers;
 using Library.API.Models;
 using System;
 using System.Collections.Generic;
@@ -16,9 +17,14 @@ namespace Library.API.Services.LibService
             Context = context;
         }
 
-        public IEnumerable<Author> GetAuthors()
+        public IEnumerable<Author> GetAuthors(AuthorsResourceParameters resourceParameters)
         {
-            return Context.Authors.OrderBy(a => a.FirstName).ThenBy(a => a.LastName);
+            return Context.Authors
+                .OrderBy(a => a.FirstName)
+                .ThenBy(a => a.LastName)
+                .Skip(resourceParameters.PageSize * (resourceParameters.PageNumber - 1))
+                .Take(resourceParameters.PageSize)
+                .ToList();
         }
 
         public IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds)

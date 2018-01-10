@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Library.API.DTOs
 {
-    public class BookUpdateDto
+    public abstract class BookEditBase
     {
         [Required(ErrorMessage = "Please enter a Title"), MaxLength(100, ErrorMessage = "Title should not exceed 100 letters.")]
         public string Title { get; set; }

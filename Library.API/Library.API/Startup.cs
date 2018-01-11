@@ -9,6 +9,7 @@ using Library.API.Helpers;
 using Library.API.Models;
 using Library.API.Services.LibService;
 using Library.API.Services.PropertyService;
+using Library.API.Services.TypeService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -50,6 +51,7 @@ namespace Library.API
                 return new UrlHelper(actionContext);
             }));
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+            services.AddTransient<ITypeHelperService, TypeHelperService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -11,6 +11,7 @@ using Library.API.Models;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Library.API.Services.PropertyService;
+using Library.API.Services.TypeService;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -22,22 +23,32 @@ namespace Library.API.Controllers
         public ILibraryRepository Repository { get; }
         public IUrlHelper UrlHelper { get; }
         public IPropertyMappingService MappingService { get; }
+        public ITypeHelperService TypeHelper { get; }
 
-        public AuthorsController(ILibraryRepository repository, IUrlHelper urlHelper, IPropertyMappingService mappingService)
+        public AuthorsController(ILibraryRepository repository, 
+            IUrlHelper urlHelper, 
+            IPropertyMappingService mappingService,
+            ITypeHelperService typeHelper)
         {
             Repository = repository;
             UrlHelper = urlHelper;
             MappingService = mappingService;
+            TypeHelper = typeHelper;
         }
 
         // GET: api/authors
         [HttpGet(Name = "GetAuthors")]
         public IActionResult Get(AuthorsResourceParameters resourceParameters)
         {
-            if (!MappingService.ValidMappingExistsFor<AuthorDto, Author>(resourceParameters.OrderBy))
+            if (!MappingService.ValidMappingExistsFor<AuthorDto, Author>
+                (resourceParameters.OrderBy))
             {
                 return BadRequest();
             }
+
+            if (!TypeHelper.TypeHasProperties<AuthorDto>(resourceParameters.Fields))
+                return BadRequest();
+
             var authors = Repository.GetAuthors(resourceParameters);
 
             var previousPageLink = authors.HasPrevious ?
@@ -60,7 +71,7 @@ namespace Library.API.Controllers
 
             var authorDto = Mapper.Map<IEnumerable<AuthorDto>>(authors);
 
-            return Ok(authorDto);
+            return Ok(authorDto.ShapeData(resourceParameters.Fields));
         }
 
         private string CreateAuthorResourceUri(AuthorsResourceParameters resourceParameters, ResourceUriType pageContext)
@@ -70,6 +81,7 @@ namespace Library.API.Controllers
                 case ResourceUriType.PreviousPage:
                     return UrlHelper.Link("GetAuthors", new
                     {
+                        fields = resourceParameters.Fields,
                         orderby = resourceParameters.OrderBy,
                         search = resourceParameters.SearchQuery,
                         genre = resourceParameters.Genre,
@@ -80,6 +92,7 @@ namespace Library.API.Controllers
                 case ResourceUriType.NextPage:
                     return UrlHelper.Link("GetAuthors", new
                     {
+                        fields = resourceParameters.Fields,
                         orderby = resourceParameters.OrderBy,
                         search = resourceParameters.SearchQuery,
                         genre = resourceParameters.Genre,
@@ -89,6 +102,7 @@ namespace Library.API.Controllers
                 default:
                     return UrlHelper.Link("GetAuthors", new 
                     {
+                        fields = resourceParameters.Fields,
                         orderby = resourceParameters.OrderBy,
                         search = resourceParameters.SearchQuery,
                         genre = resourceParameters.Genre,

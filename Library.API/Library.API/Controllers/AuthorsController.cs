@@ -10,6 +10,7 @@ using AutoMapper;
 using Library.API.Models;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using Library.API.Services.PropertyService;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -20,17 +21,23 @@ namespace Library.API.Controllers
     {
         public ILibraryRepository Repository { get; }
         public IUrlHelper UrlHelper { get; }
+        public IPropertyMappingService MappingService { get; }
 
-        public AuthorsController(ILibraryRepository repository, IUrlHelper urlHelper)
+        public AuthorsController(ILibraryRepository repository, IUrlHelper urlHelper, IPropertyMappingService mappingService)
         {
             Repository = repository;
             UrlHelper = urlHelper;
+            MappingService = mappingService;
         }
 
         // GET: api/authors
         [HttpGet(Name = "GetAuthors")]
         public IActionResult Get(AuthorsResourceParameters resourceParameters)
         {
+            if (!MappingService.ValidMappingExistsFor<AuthorDto, Author>(resourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
             var authors = Repository.GetAuthors(resourceParameters);
 
             var previousPageLink = authors.HasPrevious ?
@@ -63,6 +70,7 @@ namespace Library.API.Controllers
                 case ResourceUriType.PreviousPage:
                     return UrlHelper.Link("GetAuthors", new
                     {
+                        orderby = resourceParameters.OrderBy,
                         search = resourceParameters.SearchQuery,
                         genre = resourceParameters.Genre,
                         pageNumber = resourceParameters.PageNumber - 1,
@@ -72,6 +80,7 @@ namespace Library.API.Controllers
                 case ResourceUriType.NextPage:
                     return UrlHelper.Link("GetAuthors", new
                     {
+                        orderby = resourceParameters.OrderBy,
                         search = resourceParameters.SearchQuery,
                         genre = resourceParameters.Genre,
                         pageNumber = resourceParameters.PageNumber + 1,
@@ -80,6 +89,7 @@ namespace Library.API.Controllers
                 default:
                     return UrlHelper.Link("GetAuthors", new 
                     {
+                        orderby = resourceParameters.OrderBy,
                         search = resourceParameters.SearchQuery,
                         genre = resourceParameters.Genre,
                         pageNumber = resourceParameters.PageNumber,

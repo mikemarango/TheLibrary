@@ -1,6 +1,8 @@
 ﻿using Library.API.Data;
+using Library.API.DTOs;
 using Library.API.Helpers;
 using Library.API.Models;
+using Library.API.Services.PropertyService;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +13,12 @@ namespace Library.API.Services.LibService
     public class LibraryRepository : ILibraryRepository
     {
         public LibraryContext Context { get; }
+        public IPropertyMappingService MappingService { get; }
 
-        public LibraryRepository(LibraryContext context)
+        public LibraryRepository(LibraryContext context, IPropertyMappingService mappingService)
         {
             Context = context;
+            MappingService = mappingService;
         }
 
         public PagedList<Author> GetAuthors(AuthorsResourceParameters resourceParameters)
@@ -24,7 +28,8 @@ namespace Library.API.Services.LibService
             //    .ThenBy(a => a.LastName).AsQueryable();
 
             var collectionBeforePaging =
-                Context.Authors.ApplySort(resourceParameters.OrderBy, MappingDictionary);
+                Context.Authors.ApplySort(resourceParameters.OrderBy, MappingService.GetPropertyMapping<AuthorDto, Author>());
+
             // Filter string
             if (!string.IsNullOrEmpty(resourceParameters.Genre))
             {

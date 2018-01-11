@@ -19,10 +19,12 @@ namespace Library.API.Services.LibService
 
         public PagedList<Author> GetAuthors(AuthorsResourceParameters resourceParameters)
         {
-            var collectionBeforePaging = Context.Authors
-                .OrderBy(a => a.FirstName)
-                .ThenBy(a => a.LastName).AsQueryable();
+            //var collectionBeforePaging = Context.Authors
+            //    .OrderBy(a => a.FirstName)
+            //    .ThenBy(a => a.LastName).AsQueryable();
 
+            var collectionBeforePaging =
+                Context.Authors.ApplySort(resourceParameters.OrderBy, MappingDictionary);
             // Filter string
             if (!string.IsNullOrEmpty(resourceParameters.Genre))
             {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Library.API.DTOs
 {
-    public class BookDto
+    public class BookDto : LinkedResourceBase
     {
         public Guid Id { get; set; }
         public string Title { get; set; }

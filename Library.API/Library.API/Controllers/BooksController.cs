@@ -21,15 +21,17 @@ namespace Library.API.Controllers
     {
         public ILibraryRepository Repository { get; }
         public ILogger<BooksController> Logger { get; }
+        public IUrlHelper UrlHelper { get; }
 
-        public BooksController(ILibraryRepository repository, ILogger<BooksController> logger)
+        public BooksController(ILibraryRepository repository, ILogger<BooksController> logger, IUrlHelper urlHelper)
         {
             Repository = repository;
             Logger = logger;
+            UrlHelper = urlHelper;
         }
 
         // GET: api/<controller>
-        [HttpGet]
+        [HttpGet(Name = "GetBooks")]
         public IActionResult Get(Guid authorId)
         {
             if (!Repository.AuthorExists(authorId))
@@ -37,9 +39,17 @@ namespace Library.API.Controllers
 
             var books = Repository.GetBooks(authorId);
 
-            var bookDto = Mapper.Map<IEnumerable<BookDto>>(books);
+            var booksDto = Mapper.Map<IEnumerable<BookDto>>(books);
 
-            return Ok(bookDto);
+            booksDto = booksDto.Select(book =>
+            {
+                book = CreateBookLinks(book);
+                return book;
+            });
+
+            var booksCollection = new LinkedCollectionResource<BookDto>(booksDto);
+
+            return Ok(CreateBookCollectionLinks(booksCollection));
         }
 
         // GET api/<controller>/5
@@ -56,11 +66,11 @@ namespace Library.API.Controllers
 
             var bookDto = Mapper.Map<BookDto>(book);
 
-            return Ok(bookDto);
+            return Ok(CreateBookLinks(bookDto));
         }
 
         // POST api/<controller>
-        [HttpPost]
+        [HttpPost(Name = "CreateBook")]
         public IActionResult Post(Guid authorId, [FromBody]BookCreateDto createDto)
         {
             if (createDto == null)
@@ -86,11 +96,11 @@ namespace Library.API.Controllers
 
             var bookDto = Mapper.Map<BookDto>(book);
 
-            return CreatedAtRoute("GetBook", new { authorId, id = bookDto.Id }, bookDto );
+            return CreatedAtRoute("GetBook", new { authorId, id = bookDto.Id }, CreateBookLinks(bookDto) );
         }
 
         // PUT api/<controller>/5
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "UpdateBook")]
         public IActionResult Put(Guid authorId, Guid id, [FromBody]BookUpdateDto bookDto)
         {
             if (bookDto == null) return BadRequest();
@@ -118,7 +128,7 @@ namespace Library.API.Controllers
 
                 var bookCreated = Mapper.Map<BookDto>(bookToAdd);
 
-                return CreatedAtRoute("GetBook",new { authorId, id = bookCreated.Id }, bookCreated);
+                return CreatedAtRoute("GetBook",new { authorId, id = bookCreated.Id }, CreateBookLinks(bookCreated));
             }
 
             // Mapper.Map<Book>(bookDto);
@@ -134,7 +144,7 @@ namespace Library.API.Controllers
         }
 
         // PATCH = Partially Update
-        [HttpPatch("{id}")]
+        [HttpPatch("{id}", Name = "PartiallyUpdateBook")]
         public IActionResult Patch(Guid authorId, Guid id, [FromBody]JsonPatchDocument<BookUpdateDto> bookPatch)
         {
             if (bookPatch == null)
@@ -172,7 +182,7 @@ namespace Library.API.Controllers
 
                 var bookCreated = Mapper.Map<BookDto>(bookToAdd);
 
-                return CreatedAtRoute("GetBook", new { authorId, id = bookCreated.Id }, bookCreated);
+                return CreatedAtRoute("GetBook", new { authorId, id = bookCreated.Id }, CreateBookLinks(bookCreated));
             }
 
             var bookUpdateDto = Mapper.Map<BookUpdateDto>(book);
@@ -198,7 +208,7 @@ namespace Library.API.Controllers
         }
 
         // DELETE api/<controller>/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeleteBook")]
         public IActionResult Delete(Guid authorId, Guid id)
         {
             if (!Repository.AuthorExists(authorId))
@@ -216,6 +226,33 @@ namespace Library.API.Controllers
             Logger.LogInformation(100, $"Book {id} for author {authorId} was deleted.");
 
             return NoContent();
+        }
+
+        private BookDto CreateBookLinks(BookDto bookDto)
+        {
+            bookDto.Links.Add(new LinkDto(UrlHelper.Link(
+                "GetBook", new { id = bookDto.Id }), "self", "GET"));
+
+            bookDto.Links.Add(new LinkDto(UrlHelper.Link(
+                "DeleteBook", new { id = bookDto.Id }), "delete_book", "DELETE"));
+
+            bookDto.Links.Add(new LinkDto(UrlHelper.Link(
+                "UpdateBook", new { id = bookDto.Id }), "update_book", "PUT"));
+
+            bookDto.Links.Add(new LinkDto(UrlHelper.Link(
+                "PartiallyUpdateBook", new { id = bookDto.Id }), "partially_update_book", "PATCH"));
+
+            return bookDto;
+        }
+
+        private LinkedCollectionResource<BookDto> CreateBookCollectionLinks(
+            LinkedCollectionResource<BookDto> booksCollectionDto)
+        {
+            // link to self
+            booksCollectionDto.Links.Add(
+                new LinkDto(UrlHelper.Link("GetBooks", new { }), "self", "GET"));
+
+            return booksCollectionDto;
         }
     }
 }

@@ -22,7 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
+using Newtonsoft.Json.Serialization;
 
 namespace Library.API
 {
@@ -38,7 +38,12 @@ namespace Library.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().AddXmlDataContractSerializerFormatters();
+            services.AddMvc().AddXmlDataContractSerializerFormatters()
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new
+                    CamelCasePropertyNamesContractResolver();
+                });
 
             services.AddDbContext<LibraryContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));

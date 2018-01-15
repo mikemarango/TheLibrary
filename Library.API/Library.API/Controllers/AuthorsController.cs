@@ -126,7 +126,35 @@ namespace Library.API.Controllers
 
             var authorDto = Mapper.Map<AuthorDto>(author);
 
-            return Ok(authorDto.ShapeData(fields));
+            var links = CreateAuthorLinks(id, fields);
+
+            var linkedResourceResponse = author.ShapeData(fields) as IDictionary<string, object>;
+
+            linkedResourceResponse.Add("links", links);
+
+            return Ok(linkedResourceResponse);
+        }
+
+        private IEnumerable<LinkDto> CreateAuthorLinks(Guid id, string fields)
+        {
+            var links = new List<LinkDto>();
+
+            if (string.IsNullOrWhiteSpace(fields))
+            {
+                links.Add(new LinkDto(UrlHelper.Link("GetAuthor", new { id }), "self", "GET"));
+            }
+            else
+            {
+                links.Add(new LinkDto(UrlHelper.Link("GetAuthor", new { id, fields }), "self", "GET"));
+            }
+
+            links.Add(new LinkDto(UrlHelper.Link("DeleteAuthor", new { id }), "delete_author", "DELETE"));
+
+            links.Add(new LinkDto(UrlHelper.Link("CreateBook", new { authorId = id }), "create_book", "POST"));
+
+            links.Add(new LinkDto(UrlHelper.Link("GetBooks", new { authorId = id }), "books", "GET"));
+
+            return links;
         }
 
         // POST api/<controller>
@@ -145,7 +173,14 @@ namespace Library.API.Controllers
 
             var authorDto = Mapper.Map<AuthorDto>(author);
 
-            return CreatedAtRoute("GetAuthor", new { id = authorDto.Id }, authorDto);
+            var links = CreateAuthorLinks(authorDto.Id, null);
+
+            var linkedResourceResponse = authorDto.ShapeData(null)
+                as IDictionary<string, object>;
+
+            linkedResourceResponse.Add("links", links);
+
+            return CreatedAtRoute("GetAuthor", new { id = linkedResourceResponse["Id"] }, linkedResourceResponse);
         }
 
         [HttpPost("{id}")]
@@ -165,7 +200,7 @@ namespace Library.API.Controllers
         }
 
         // DELETE api/<controller>/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}", Name = "DeleteAuthor")]
         public IActionResult Delete(Guid id)
         {
             Author author = Repository.GetAuthor(id);

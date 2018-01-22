@@ -51,11 +51,7 @@ namespace Library.API.Controllers
 
             var authors = Repository.GetAuthors(resourceParameters);
 
-            var previousPageLink = authors.HasPrevious ?
-                CreateAuthorResourceUri(resourceParameters, ResourceUriType.PreviousPage) : null;
-
-            var nextPageLink = authors.HasNext ?
-                CreateAuthorResourceUri(resourceParameters, ResourceUriType.NextPage) : null;
+           
 
             var paginationMetadata = new
             {
@@ -63,15 +59,53 @@ namespace Library.API.Controllers
                 pageSize = authors.PageSize,
                 currentPage = authors.CurrentPage,
                 totalPages = authors.TotalPages,
-                previousPageLink,
-                nextPageLink
             };
 
             Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationMetadata));
 
-            var authorDto = Mapper.Map<IEnumerable<AuthorDto>>(authors);
+            var authorCollection = Mapper.Map<IEnumerable<AuthorDto>>(authors);
 
-            return Ok(authorDto.ShapeData(resourceParameters.Fields));
+            var links = CreateAuthorCollectionLinks(resourceParameters, authors.HasNext, authors.HasPrevious);
+
+            var shapedAuthors = authorCollection.ShapeData(resourceParameters.Fields);
+
+            var shapedAuthorLinks = shapedAuthors.Select(author =>
+            {
+                var authorAsDictionary = author as IDictionary<string, object>;
+                var authorLinks = CreateAuthorLinks((Guid)authorAsDictionary["Id"], resourceParameters.Fields);
+                authorAsDictionary.Add("links", authorLinks);
+                return authorAsDictionary;
+            });
+
+            var linkedCollectionResource = new
+            {
+                value = shapedAuthorLinks,
+                links = links
+            };
+
+            return Ok(linkedCollectionResource);
+
+        }
+
+        private IEnumerable<LinkDto> CreateAuthorCollectionLinks(AuthorsResourceParameters authorsResourceParameters, bool hasNext, bool hasPrevious)
+        {
+            var links = new List<LinkDto>
+            {
+                // self
+                new LinkDto(CreateAuthorResourceUri(authorsResourceParameters, ResourceUriType.CurrentPage), "self", "GET")
+            };
+
+            if (hasNext)
+            {
+                links.Add(new LinkDto(CreateAuthorResourceUri(authorsResourceParameters, ResourceUriType.NextPage), "nextPage", "GET"));
+            }
+
+            if (hasPrevious)
+            {
+                links.Add(new LinkDto(CreateAuthorResourceUri(authorsResourceParameters, ResourceUriType.PreviousPage), "previousPage", "GET"));
+            }
+
+            return links;
         }
 
         private string CreateAuthorResourceUri(AuthorsResourceParameters resourceParameters, ResourceUriType pageContext)
@@ -99,6 +133,7 @@ namespace Library.API.Controllers
                         pageNumber = resourceParameters.PageNumber + 1,
                         pageSize = resourceParameters.PageSize
                     });
+                case ResourceUriType.CurrentPage:
                 default:
                     return UrlHelper.Link("GetAuthors", new 
                     {
@@ -128,11 +163,11 @@ namespace Library.API.Controllers
 
             var authorLinks = CreateAuthorLinks(id, fields);
 
-            var authorResourceLink = author.ShapeData(fields) as IDictionary<string, object>;
+            var authorResourceLinks = authorDto.ShapeData(fields) as IDictionary<string, object>;
 
-            authorResourceLink.Add("links", authorLinks);
+            authorResourceLinks.Add("links", authorLinks);
 
-            return Ok(authorResourceLink);
+            return Ok(authorResourceLinks);
         }
 
         // POST api/<controller>
@@ -153,12 +188,12 @@ namespace Library.API.Controllers
 
             var links = CreateAuthorLinks(authorDto.Id, null);
 
-            var authorsResourceLinks = authorDto.ShapeData(null)
+            var authorResourceLinks = authorDto.ShapeData(null)
                 as IDictionary<string, object>;
 
-            authorsResourceLinks.Add("links", links);
+            authorResourceLinks.Add("links", links);
 
-            return CreatedAtRoute("GetAuthor", new { id = authorsResourceLinks["Id"] }, authorsResourceLinks);
+            return CreatedAtRoute("GetAuthor", new { id = authorResourceLinks["Id"] }, authorResourceLinks);
         }
 
         [HttpPost("{id}")]

@@ -196,7 +196,7 @@ namespace Library.API.Controllers
         }
 
         // POST api/<controller>
-        [HttpPost]
+        [HttpPost(Name = "CreateAuthor")]
         public IActionResult Post([FromBody]AuthorCreateDto authorCreate)
         {
             if (authorCreate == null)

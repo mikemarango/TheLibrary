@@ -38,7 +38,7 @@ namespace Library.API.Controllers
 
         // GET: api/authors
         [HttpGet(Name = "GetAuthors")]
-        public IActionResult Get(AuthorsResourceParameters resourceParameters)
+        public IActionResult Get(AuthorsResourceParameters resourceParameters, [FromHeader(Name = "Accept")]string mediaType)
         {
             if (!MappingService.ValidMappingExistsFor<AuthorDto, Author>
                 (resourceParameters.OrderBy))
@@ -51,40 +51,65 @@ namespace Library.API.Controllers
 
             var authors = Repository.GetAuthors(resourceParameters);
 
-           
-
-            var paginationMetadata = new
-            {
-                totalCount = authors.TotalCount,
-                pageSize = authors.PageSize,
-                currentPage = authors.CurrentPage,
-                totalPages = authors.TotalPages,
-            };
-
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationMetadata));
-
             var authorCollection = Mapper.Map<IEnumerable<AuthorDto>>(authors);
 
-            var links = CreateAuthorCollectionLinks(resourceParameters, authors.HasNext, authors.HasPrevious);
 
-            var shapedAuthors = authorCollection.ShapeData(resourceParameters.Fields);
-
-            var shapedAuthorLinks = shapedAuthors.Select(author =>
+            if (mediaType == "application/vnd.netXworks.hateoas+json") 
             {
-                var authorAsDictionary = author as IDictionary<string, object>;
-                var authorLinks = CreateAuthorLinks((Guid)authorAsDictionary["Id"], resourceParameters.Fields);
-                authorAsDictionary.Add("links", authorLinks);
-                return authorAsDictionary;
-            });
+                var paginationMetadata = new
+                {
+                    totalCount = authors.TotalCount,
+                    pageSize = authors.PageSize,
+                    currentPage = authors.CurrentPage,
+                    totalPages = authors.TotalPages,
+                };
 
-            var linkedCollectionResource = new
+                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationMetadata));
+
+                var links = CreateAuthorCollectionLinks(resourceParameters, authors.HasNext, authors.HasPrevious);
+
+                var shapedAuthors = authorCollection.ShapeData(resourceParameters.Fields);
+
+                var shapedAuthorLinks = shapedAuthors.Select(author =>
+                {
+                    var authorAsDictionary = author as IDictionary<string, object>;
+                    var authorLinks = CreateAuthorLinks((Guid)authorAsDictionary["Id"], resourceParameters.Fields);
+                    authorAsDictionary.Add("links", authorLinks);
+                    return authorAsDictionary;
+                });
+
+                var linkedCollectionResource = new
+                {
+                    value = shapedAuthorLinks,
+                    links = links
+                };
+
+                return Ok(linkedCollectionResource);
+            }
+
+            else
             {
-                value = shapedAuthorLinks,
-                links = links
-            };
+                var previousPageLink = authors.HasPrevious ?
+                    CreateAuthorResourceUri(resourceParameters, ResourceUriType.PreviousPage) : null;
 
-            return Ok(linkedCollectionResource);
+                var nextPageLink = authors.HasNext ?
+                    CreateAuthorResourceUri(resourceParameters, ResourceUriType.NextPage) : null;
 
+                var paginationMetadata = new
+                {
+                    previousPageLink,
+                    nextPageLink,
+                    totalCount = authors.TotalCount,
+                    pageSize = authors.PageSize,
+                    currentPage = authors.CurrentPage,
+                    totalPages = authors.TotalPages
+                };
+
+                Response.Headers.Add("X-Pagination",
+                    JsonConvert.SerializeObject(paginationMetadata));
+
+                return Ok(authorCollection.ShapeData(resourceParameters.Fields));
+            }
         }
 
         private IEnumerable<LinkDto> CreateAuthorCollectionLinks(AuthorsResourceParameters authorsResourceParameters, bool hasNext, bool hasPrevious)

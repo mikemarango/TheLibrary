@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -38,8 +39,18 @@ namespace Library.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().AddXmlDataContractSerializerFormatters()
-                .AddJsonOptions(options =>
+            services.AddMvc(setupAction =>
+            {
+                var jsonOutFormatter = setupAction.OutputFormatters
+                .OfType<JsonOutputFormatter>().FirstOrDefault();
+
+                if (jsonOutFormatter != null)
+                {
+                    jsonOutFormatter.SupportedMediaTypes.Add("application/vnd.netXworks.hateoas+json");
+                }
+
+            }).AddXmlDataContractSerializerFormatters()
+            .AddJsonOptions(options =>
                 {
                     options.SerializerSettings.ContractResolver = new
                     CamelCasePropertyNamesContractResolver();

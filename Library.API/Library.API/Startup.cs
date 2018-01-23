@@ -97,6 +97,8 @@ namespace Library.API
                 {
                     validationModelOptions.AddMustRevalidate = true;
                 });
+
+            services.AddResponseCaching();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -144,6 +146,7 @@ namespace Library.API
                 config.CreateMap<Book, BookUpdateDto>();
             });
 
+            app.UseResponseCaching();
             app.UseHttpCacheHeaders();
             app.UseMvc();
         }

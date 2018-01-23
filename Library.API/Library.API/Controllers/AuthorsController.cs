@@ -38,6 +38,7 @@ namespace Library.API.Controllers
 
         // GET: api/authors
         [HttpGet(Name = "GetAuthors")]
+        [HttpHead]
         public IActionResult Get(AuthorsResourceParameters resourceParameters, [FromHeader(Name = "Accept")]string mediaType)
         {
             if (!MappingService.ValidMappingExistsFor<AuthorDto, Author>

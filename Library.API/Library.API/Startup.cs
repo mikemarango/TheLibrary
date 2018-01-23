@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AspNetCoreRateLimit;
 using AutoMapper;
 using Library.API.Data;
 using Library.API.DTOs;
@@ -99,6 +100,20 @@ namespace Library.API
                 });
 
             services.AddResponseCaching();
+
+            services.AddMemoryCache();
+
+            services.Configure<IpRateLimitOptions>(options =>
+            {
+                options.GeneralRules = new List<RateLimitRule>()
+                {
+                    new RateLimitRule() { Endpoint = "*", Limit = 1000, Period = "5m" },
+                    new RateLimitRule() { Endpoint = "*", Limit = 200, Period = "10s" }
+                };
+            });
+
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -146,6 +161,7 @@ namespace Library.API
                 config.CreateMap<Book, BookUpdateDto>();
             });
 
+            app.UseIpRateLimiting();
             app.UseResponseCaching();
             app.UseHttpCacheHeaders();
             app.UseMvc();

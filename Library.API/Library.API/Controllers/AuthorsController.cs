@@ -197,7 +197,34 @@ namespace Library.API.Controllers
 
         // POST api/<controller>
         [HttpPost(Name = "CreateAuthor")]
+        [RequestHeaderMatchesMediaType("Content-Type", new[] { "application/vnd.netXworks.author.full+json" })]
         public IActionResult Post([FromBody]AuthorCreateDto authorCreate)
+        {
+            if (authorCreate == null)
+                return BadRequest();
+
+            var author = Mapper.Map<Author>(authorCreate);
+
+            Repository.CreateAuthor(author);
+
+            if (!Repository.Save())
+                throw new Exception("Author creation unsuccessful.");
+
+            var authorDto = Mapper.Map<AuthorDto>(author);
+
+            var links = CreateAuthorLinks(authorDto.Id, null);
+
+            var authorResourceLinks = authorDto.ShapeData(null)
+                as IDictionary<string, object>;
+
+            authorResourceLinks.Add("links", links);
+
+            return CreatedAtRoute("GetAuthor", new { id = authorResourceLinks["Id"] }, authorResourceLinks);
+        }
+
+        [HttpPost(Name = "CreateAuthorWithDateOfDeath")]
+        [RequestHeaderMatchesMediaType("Content-Type", new[] { "application/vnd.netXworks.authorwithdateofdeath.full+json" })]
+        public IActionResult Post([FromBody]AuthorCreateWithDeathDateDto authorCreate)
         {
             if (authorCreate == null)
                 return BadRequest();

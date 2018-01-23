@@ -41,6 +41,17 @@ namespace Library.API
         {
             services.AddMvc(setupAction =>
             {
+                var jsonInFormatter = setupAction.InputFormatters
+                .OfType<JsonInputFormatter>().FirstOrDefault();
+
+                if (jsonInFormatter != null)
+                {
+                    jsonInFormatter.SupportedMediaTypes
+                    .Add("application/vnd.netXworks.author.full+json");
+                    jsonInFormatter.SupportedMediaTypes
+                    .Add("application/vnd.netXworks.authorwithdateofdeath.full+json");
+                }
+
                 var jsonOutFormatter = setupAction.OutputFormatters
                 .OfType<JsonOutputFormatter>().FirstOrDefault();
 
@@ -105,10 +116,11 @@ namespace Library.API
                     .ForMember(dest => dest.Name, opt => opt.MapFrom(src =>
                     $"{src.FirstName} {src.LastName}"))
                     .ForMember(dest => dest.Age, opt => opt.MapFrom(src =>
-                    src.DateOfBirth.GetCurrentAge()));
+                    src.DateOfBirth.GetCurrentAge(src.DateOfDeath)));
 
                 config.CreateMap<Book, BookDto>();
                 config.CreateMap<AuthorCreateDto, Author>();
+                config.CreateMap<AuthorCreateWithDeathDateDto, Author>();
                 config.CreateMap<BookCreateDto, Book>();
                 config.CreateMap<BookUpdateDto, Book>();
                 config.CreateMap<Book, BookUpdateDto>();

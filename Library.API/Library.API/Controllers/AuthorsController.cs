@@ -223,7 +223,8 @@ namespace Library.API.Controllers
         }
 
         [HttpPost(Name = "CreateAuthorWithDateOfDeath")]
-        [RequestHeaderMatchesMediaType("Content-Type", new[] { "application/vnd.netXworks.authorwithdateofdeath.full+json" })]
+        [RequestHeaderMatchesMediaType("Content-Type", new[] { "application/vnd.netXworks.authorwithdateofdeath.full+json", "application/vnd.netXworks.authorwithdateofdeath.full+xml" })]
+        //[RequestHeaderMatchesMediaType("Accept", new[] { "application/vnd.netXworks.authorwithdateofdeath.full+json", "application/vnd.netXworks.authorwithdateofdeath.full+xml" })]
         public IActionResult Post([FromBody]AuthorCreateWithDeathDateDto authorCreate)
         {
             if (authorCreate == null)

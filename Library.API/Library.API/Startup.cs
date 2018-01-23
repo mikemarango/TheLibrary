@@ -41,6 +41,15 @@ namespace Library.API
         {
             services.AddMvc(setupAction =>
             {
+                var xmlInFormatter = setupAction.InputFormatters
+                .OfType<XmlSerializerInputFormatter>().FirstOrDefault();
+
+                if (xmlInFormatter != null)
+                {
+                    xmlInFormatter.SupportedMediaTypes
+                    .Add("application/vnd.netXworks.authorwithdateofdeath.full+xml");
+                }
+
                 var jsonInFormatter = setupAction.InputFormatters
                 .OfType<JsonInputFormatter>().FirstOrDefault();
 

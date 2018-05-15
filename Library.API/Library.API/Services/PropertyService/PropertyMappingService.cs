@@ -15,7 +15,7 @@ namespace Library.API.Services.PropertyService
             propertyMappings.Add(new PropertyMapping<AuthorDto, Author>(authorPropertyMapping));
         }
 
-        private Dictionary<string, PropertyMappingValue> authorPropertyMapping =
+        private readonly Dictionary<string, PropertyMappingValue> authorPropertyMapping =
             new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
             {
                 { "Id", new PropertyMappingValue(new List<string>() { "Id" }) },

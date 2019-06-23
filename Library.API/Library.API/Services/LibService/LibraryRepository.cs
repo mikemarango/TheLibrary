@@ -135,7 +135,7 @@ namespace Library.API.Services.LibService
 
         public bool Save()
         {
-            return (Context.SaveChanges() >= 0);
+            return Context.SaveChanges() >= 0;
         }
 
     }

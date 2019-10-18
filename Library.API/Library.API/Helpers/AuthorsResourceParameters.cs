@@ -13,14 +13,8 @@ namespace Library.API.Helpers
 
         public int PageSize
         {
-            get
-            {
-                return pageSize;
-            }
-            set
-            {
-                pageSize = (value > MAX_PAGE_SIZE) ? MAX_PAGE_SIZE : value;
-            }
+            get => pageSize;
+            set => pageSize = (value > MAX_PAGE_SIZE) ? MAX_PAGE_SIZE : value;
         }
 
         public string Genre { get; set; }

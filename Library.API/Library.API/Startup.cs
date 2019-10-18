@@ -82,11 +82,11 @@ namespace Library.API
 
             services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
-            services.AddScoped<IUrlHelper, UrlHelper>((implementationFactory =>
+            services.AddScoped<IUrlHelper, UrlHelper>(implementationFactory =>
             {
                 var actionContext = implementationFactory.GetService<IActionContextAccessor>().ActionContext;
                 return new UrlHelper(actionContext);
-            }));
+            });
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
             services.AddTransient<ITypeHelperService, TypeHelperService>();
             services.AddHttpCacheHeaders(
